@@ -11,6 +11,29 @@
 using std::unordered_map;
 using std::vector;
 
+class Solution
+{
+public:
+    vector<int> hashMap;
+    int climbStairs(int n)
+    {
+        if (n == 1)
+            return 1;
+        if (n == 2)
+            return 2;
+        // 非递归的自底向上方法, 因为1 ~ n-1 这个返回最终都会被计算, 所以直接填表就好了
+        // 因为非递归除去了函数栈, 所以因为局部性原理反而更快
+        vector<int> hashMap(n + 1, -1);
+        hashMap[1] = 1;
+        hashMap[2] = 2;
+        for (int i = 3; i < hashMap.size(); i++)
+        {
+            hashMap[i] = hashMap[i - 1] + hashMap[i - 2];
+        }
+        return hashMap[n];
+    }
+};
+
 // @lc code=start
 class Solution
 {
