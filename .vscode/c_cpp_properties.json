@@ -7,6 +7,7 @@
             ],
             "defines": [],
             "macFrameworkPath": [],
+            "compilerPath": "/opt/homebrew/bin/gcc-13",
             "compilerArgs": [
                 "--std=c++20"
             ]
