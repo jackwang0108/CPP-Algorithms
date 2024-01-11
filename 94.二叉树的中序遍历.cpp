@@ -76,15 +76,17 @@ class Solution
         stack<TreeNode *> st;
         while (root != nullptr || !st.empty())
         {
-            // 访问左子树
+            // 中序遍历的关键在第一次访问的时候不输出, 第二次访问再输出
             while (root != nullptr)
             {
+                // 第一次访问不输出
                 st.push(root);
                 root = root->left;
             }
             root = st.top();
             st.pop();
-            ans.insert(ans.end(), root->val);
+            // 第二次访问再输出
+            ans.push_back(root->val);
             root = root->right;
         }
         return ans;
