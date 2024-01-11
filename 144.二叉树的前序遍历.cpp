@@ -62,9 +62,10 @@ class Solution
             return {};
         vector<int> ans;
         stack<TreeNode *> st;
+        // 先序遍历的关键在第一次访问的时候就直接输出
         while (root != nullptr || !st.empty())
         {
-            // 先序遍历的关键在第一次访问的时候就直接输出
+            // 直接降到底部
             while (root != nullptr)
             {
                 ans.push_back(root->val);

@@ -74,9 +74,10 @@ class Solution
     {
         vector<int> ans;
         stack<TreeNode *> st;
+        // 中序遍历的关键在第一次访问的时候不输出, 第二次访问再输出
         while (root != nullptr || !st.empty())
         {
-            // 中序遍历的关键在第一次访问的时候不输出, 第二次访问再输出
+            // 直接降到底部
             while (root != nullptr)
             {
                 // 第一次访问不输出
