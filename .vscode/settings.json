@@ -47,5 +47,11 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "typeinfo": "cpp"
-    }
+    },
+    "cSpell.words": [
+        "lresult",
+        "PRINTVEC",
+        "xorans"
+    ],
+    "cmake.sourceDirectory": "/Users/jack/project/leetcode-c-/左神算法"
 }
