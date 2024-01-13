@@ -8,6 +8,6 @@ project(
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 add_executable(
-    1-sorts
-    "./1-sorts.cpp"
+    1-sorts-xor-binarysearch
+    "./1-sorts-xor-binarysearch.cpp"
 )
