@@ -1,5 +1,9 @@
 test
 test.cpp
+**/bin
+**/*.dSYM
+
+build
 
 # Prerequisites
 *.d
