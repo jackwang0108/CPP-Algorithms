@@ -1,3 +1,4 @@
+#include <queue>
 #include <random>
 #include <vector>
 #include <iostream>
@@ -5,6 +6,7 @@
 
 using std::cout;
 using std::endl;
+using std::priority_queue;
 using std::vector;
 
 template <typename T>
@@ -55,7 +57,7 @@ public:
         return vec;
     }
 
-    // master 公式, a=2, b=2, d=1, log(b,a) =1 == 1, 复杂度 O(N*logN)
+    // master 公式, a=2, b=2, d=1, log(b,a) =1 == 1, 复杂度 O(NlogN)
     template <typename T>
     static vector<T> &mergeSort(vector<T> &vec, int left, int right)
     {
@@ -107,6 +109,95 @@ public:
         }
         std::swap(vec[++lessRegion + left], vec[right]);
         return left + lessRegion;
+    }
+
+    // 堆排序, 使用大根堆, 时间复杂度O(NlogN), heapInsert和heapify都是logN
+    // 空间复杂度 O(1)
+    template <typename T>
+    static vector<T> &heapSort(vector<T> &vec)
+    {
+        // heapInsert复杂度高, 可以直接从最后一个节点开始heapify
+        // for (int i = 0; i < vec.size(); i++)
+        //     heapInsert(vec, i);
+        for (int i = vec.size() - 1; i >= 0; i--)
+            heapify(vec, i, vec.size());
+        int heapSize = vec.size();
+        std::swap(vec[0], vec[--heapSize]);
+        while (heapSize > 0)
+        {
+            heapify(vec, 0, heapSize);
+            std::swap(vec[0], vec[--heapSize]);
+        }
+
+        return vec;
+    }
+
+    template <typename T>
+    static void heapInsert(vector<T> &vec, int idx)
+    {
+        while (vec[idx] > vec[(idx - 1) / 2])
+        {
+            std::swap(vec[idx], vec[(idx - 1) / 2]);
+            idx = (idx - 1) / 2;
+        }
+    }
+
+    template <typename T>
+    static void heapify(vector<T> &vec, int idx, int heapSize)
+    {
+        int left = 2 * idx + 1;
+        while (left < heapSize)
+        {
+            int largerChildIdx = left + 1 < heapSize && vec[left + 1] > vec[left] ? left + 1 : left;
+            int largestIdx = vec[idx] > vec[largerChildIdx] ? idx : largerChildIdx;
+            if (idx == largestIdx)
+                break;
+            std::swap(vec[idx], vec[largestIdx]);
+            idx = largestIdx;
+            left = 2 * idx + 1;
+        }
+    }
+
+    template <typename T>
+    static vector<T> &radixSort(vector<T> &vec)
+    {
+        int max = vec[0];
+        for (int i = 0; i < vec.size(); i++)
+            max = std::max(max, vec[i]);
+        int digits = 0;
+        while (max > 0)
+        {
+            max /= 10;
+            digits++;
+        }
+
+        int radix = 10;
+        vector<T> bucket(vec.size(), 0);
+        for (int d = 0; d < digits; d++)
+        {
+            vector<T> count(radix, 0);
+            // 倒入桶中
+            for (int i = 0; i < vec.size(); i++)
+                count[getDigit(vec[i], d)]++;
+            // 处理为前缀和
+            for (int i = 1; i < radix; i++)
+                count[i] = count[i] + count[i - 1];
+            // 从桶中倒出来
+            for (int i = vec.size() - 1; i >= 0; i--)
+                bucket[--count[getDigit(vec[i], d)]] = vec[i];
+            // 复制回去
+            for (int i = 0; i < vec.size(); i++)
+                vec[i] = bucket[i];
+        }
+
+        return vec;
+    }
+
+    static int getDigit(int num, int digit)
+    {
+        while (digit-- > 0)
+            num /= 10;
+        return num % 10;
     }
 };
 
@@ -225,7 +316,7 @@ public:
     }
 };
 
-class Recursion
+class Problems
 {
 public:
     // 系统上的递归会自动调用函数栈
@@ -301,7 +392,8 @@ public:
         return sum;
     }
 
-    // 逆序对问题在一个数组中，左边的数如果比右边的数大，则折两个数构成一个逆序对，请打印所有逆序对。
+    // 逆序对问题
+    // 在一个数组中，左边的数如果比右边的数大，则折两个数构成一个逆序对，请打印所有逆序对。
     template <typename T>
     static void reversedPair(vector<T> &vec)
     {
@@ -343,11 +435,10 @@ public:
             merged[mergedIdx++] = vec[rightIdx++];
         std::copy(merged.begin(), merged.end(), vec.begin() + left);
     }
-};
 
-class HollandFlag
-{
-public:
+    // 荷兰国旗问题 1
+    // 给定一个数组arr，和一个数num，请把小于等于num的数放在数组的左边，大于num的数放在数组的右边。
+    // 要求额外空间复杂度O(1)，时间复杂度O(N)
     template <typename T>
     static void hollandFlag(vector<T> &vec, int num)
     {
@@ -357,6 +448,9 @@ public:
                 std::swap(vec[++lessRegion], vec[i]);
     }
 
+    // 荷兰国旗问题 2
+    // 给定一个数组arr，和一个数num，请把小于num的数放在数组的左边，等于num的数放在数组的中间，大于num的数放在数组的右边。
+    // 要求额外空间复杂度O(1)，时间复杂度O(N)
     template <typename T>
     static void hollandFlagFull(vector<T> &vec, int num)
     {
@@ -369,6 +463,30 @@ public:
                 std::swap(vec[--greatRegion], vec[i]);
         }
     }
+
+    // 堆排序扩展题目
+    // 已知一个几乎有序的数组，几乎有序是指，如果把数组排好顺序的话，每个元素移动的距离可以不超过k，并且k相对于数组来说比较小。
+    // 请选择一个合适的排序算法针对这个数据进行排序。
+    template <typename T>
+    static vector<T> &sortedArrayLessK(vector<T> &vec, int k)
+    {
+        priority_queue<int, vector<int>, std::greater<>> heap;
+        for (int i = 0; i < k; i++)
+            heap.push(vec[i]);
+        int copyIdx = 0;
+        for (int i = k; i < vec.size(); i++)
+        {
+            vec[copyIdx++] = heap.top();
+            heap.pop();
+            heap.push(vec[i]);
+        }
+        while (!heap.empty())
+        {
+            vec[copyIdx++] = heap.top();
+            heap.pop();
+        }
+        return vec;
+    }
 };
 
 int main(int argc, char *argv[])
@@ -377,20 +495,27 @@ int main(int argc, char *argv[])
 
     vector<int> vec{9, -2, -1, 9, 2, 0, -3, 5, -6};
     std::shuffle(vec.begin(), vec.end(), rng);
-    cout << "After Shuffle: " << vec;
+    cout << "Shuffled: " << vec;
     cout << "After Sorts: " << Sorts::selectSort(vec);
     std::shuffle(vec.begin(), vec.end(), rng);
-    cout << "After Shuffle: " << vec;
+    cout << "Shuffled: " << vec;
     cout << "After Sorts: " << Sorts::bubbleSort(vec);
     std::shuffle(vec.begin(), vec.end(), rng);
-    cout << "After Shuffle: " << vec;
+    cout << "Shuffled: " << vec;
     cout << "After Sorts: " << Sorts::insertSort(vec);
     std::shuffle(vec.begin(), vec.end(), rng);
-    cout << "After Shuffle: " << vec;
+    cout << "Shuffled: " << vec;
     cout << "After Sorts: " << Sorts::mergeSort(vec, 0, vec.size() - 1);
     std::shuffle(vec.begin(), vec.end(), rng);
-    cout << "After Shuffle: " << vec;
+    cout << "Shuffled: " << vec;
     cout << "After Sorts: " << Sorts::quickSort(vec, 0, vec.size() - 1);
+    std::shuffle(vec.begin(), vec.end(), rng);
+    cout << "Shuffled: " << vec;
+    cout << "After Sorts: " << Sorts::heapSort(vec);
+
+    vector<int> radixNums{6, 11, 25, 30, 100, 57};
+    cout << "Shuffled" << radixNums;
+    cout << "After Sorts: " << Sorts::radixSort(radixNums);
 
     vector<int> nums{1, 2, 3, 4, 5};
     cout << BitXor::swap(nums, 0, 1);
@@ -423,26 +548,30 @@ int main(int argc, char *argv[])
 
     vector<int> vec1{9, -2, -1, 9, 2, 0, -3, 5, 16};
     cout << vec1;
-    int max = Recursion::getMax(vec1, 0, vec1.size());
+    int max = Problems::getMax(vec1, 0, vec1.size());
     cout << "Max: " << max << endl;
 
     vector<int> smallSum{1, 3, 4, 2, 5};
-    cout << "Small Sum: " << Recursion::smallSum(smallSum) << endl;
+    cout << "Small Sum: " << Problems::smallSum(smallSum) << endl;
 
     vector<int> reversedPair{5, 4, 3, 2, 1};
     cout << reversedPair;
     cout << "All reversed pair: ";
-    Recursion::reversedPair(reversedPair);
+    Problems::reversedPair(reversedPair);
     cout << endl;
 
     vector<int> hollandFlag1{3, 5, 6, 7, 4, 3, 5, 8};
     cout << hollandFlag1;
-    HollandFlag::hollandFlag(hollandFlag1, 5);
+    Problems::hollandFlag(hollandFlag1, 5);
     cout << hollandFlag1;
     vector<int> hollandFlag2{3, 5, 6, 7, 4, 3, 5, 8};
     cout << hollandFlag2;
-    HollandFlag::hollandFlagFull(hollandFlag2, 5);
+    Problems::hollandFlagFull(hollandFlag2, 5);
     cout << hollandFlag2;
+
+    vector<int> sortedLessK{3, 2, 1, 6, 5, 4, 9, 8, 7};
+    cout << sortedLessK;
+    cout << "After sorted: " << Problems::sortedArrayLessK(sortedLessK, 3);
 
     return 0;
 }
