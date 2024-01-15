@@ -1,5 +1,7 @@
+#include <random>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 using std::cout;
 using std::endl;
@@ -43,6 +45,7 @@ public:
         return vec;
     }
 
+    // O(N^2)
     template <typename T>
     static vector<T> &insertSort(vector<T> &vec)
     {
@@ -50,6 +53,60 @@ public:
             for (int testIdx = insertIdx - 1; testIdx >= 0 && vec[testIdx] > vec[testIdx + 1]; testIdx--)
                 std::swap(vec[testIdx], vec[testIdx + 1]);
         return vec;
+    }
+
+    // master 公式, a=2, b=2, d=1, log(b,a) =1 == 1, 复杂度 O(N*logN)
+    template <typename T>
+    static vector<T> &mergeSort(vector<T> &vec, int left, int right)
+    {
+        if (left == right)
+            return vec;
+        int mid = left + ((right - left) >> 1);
+        mergeSort(vec, left, mid);
+        mergeSort(vec, mid + 1, right);
+        merge<int>(vec, left, mid, right);
+        return vec;
+    }
+
+    template <typename T>
+    static void merge(vector<T> &vec, int left, int mid, int right)
+    {
+        vector<T> merged(right - left + 1, 0);
+        int leftIdx = left, rightIdx = mid + 1, mergeIdx = 0;
+        while (leftIdx <= mid && rightIdx <= right)
+            merged[mergeIdx++] = vec[leftIdx] < vec[rightIdx] ? vec[leftIdx++] : vec[rightIdx++];
+        while (leftIdx <= mid)
+            merged[mergeIdx++] = vec[leftIdx++];
+        // ! 因为要用到right的值, 所以调用的时候要传入vec.size() - 1
+        while (rightIdx <= right)
+            merged[mergeIdx++] = vec[rightIdx++];
+        std::copy(merged.begin(), merged.end(), vec.begin() + left);
+    }
+
+    // 结合荷兰国旗, 实现快速排序, O(NlogN), 节省空间
+    template <typename T>
+    static vector<T> &quickSort(vector<T> &vec, int left, int right)
+    {
+        if (vec.size() == 0 || vec.size() == 1 || left >= right)
+            return vec;
+        int mid = partition(vec, left, right);
+        quickSort(vec, left, mid - 1);
+        quickSort(vec, mid + 1, right);
+        return vec;
+    }
+
+    template <typename T>
+    static int partition(vector<T> &vec, int left, int right)
+    {
+        std::swap(vec[left], vec[right]);
+        int lessRegion = -1;
+        for (int i = left; i < right; i++)
+        {
+            if (vec[i] <= vec[right])
+                std::swap(vec[++lessRegion + left], vec[i]);
+        }
+        std::swap(vec[++lessRegion + left], vec[right]);
+        return left + lessRegion;
     }
 };
 
@@ -123,6 +180,7 @@ public:
         int mid = (left + right) / 2;
         if (vec[mid] == num)
             return mid;
+        // ! 递归左侧一般不要 mid-1, 直接 left ~ mid这个范围即可, 否则需要判断是否溢出
         int lresult = binarySearch(vec, left, mid - 1, num);
         int rresult = binarySearch(vec, mid + 1, right, num);
         if (lresult != -1)
@@ -167,12 +225,172 @@ public:
     }
 };
 
+class Recursion
+{
+public:
+    // 系统上的递归会自动调用函数栈
+    // 递归问题时间复杂度分析使用 master 公式
+    // T(N) = a * T(N/b) + O(N^d)
+    //  - T(N): 母问题的规模
+    //  - T(N/b): 子问题的规模, 即子问题是母问题的N/b
+    //  - a: 子问题被调用了多少次
+    //  - O(N^d): 除了递归调用以外剩下操作的时间复杂度
+    // 所以对于下面的方法, T(N) = 2*T(N/2) + O(1), 即 a=2, b=2, d=0
+    // 根据master公式:
+    //  * log(b,a) > d,   则时间复杂度为 O(N^log(b,a))
+    //  * log(b,a) = d,   则时间复杂度为 O(N^d * logN)
+    //  * log(b,a) < d,   则时间复杂度为 O(N^d)
+    // 则下面的方法, log(2,2)=1 > 0, 故时间复杂度为O(N), 因此等效于从左到右扫描一遍的时间复杂度
+    // 不过空间上的效率不佳
+    template <typename T>
+    static int getMax(vector<T> &vec, int left, int right)
+    {
+        if (left >= right)
+            return vec[left];
+        // (left+right)可能溢出, 右移可以防止溢出
+        int mid = left + ((right - left) >> 1);
+        int leftMax = getMax(vec, left, mid);
+        int rightMax = getMax(vec, mid + 1, right);
+        return std::max(leftMax, rightMax);
+    }
+
+    // 小和问题
+    // 在一个数组中，每一个数左边比当前数小的数累加起来，叫做这个数组的小和。
+    // 求一个数组的小和。例子: [1,3,4,2,5], 1左边比1小的数，没有;
+    // 3左边比3小的数，1; 4左边比4小的数，1、3; 2左边比2小的数，1;
+    // 5左边比5小的数，1、3、4、2;
+    // 所以小和为1+1+3+1+1+3+4+2=16
+    template <typename T>
+    static int smallSum(vector<T> &vec)
+    {
+        if (vec.size() == 0 || vec.size() == 1)
+            return 0;
+        return processSmallSum(vec, 0, vec.size() - 1);
+    }
+
+    template <typename T>
+    static int processSmallSum(vector<T> &vec, int left, int right)
+    {
+        if (left == right)
+            return 0;
+        int mid = left + ((right - left) >> 1);
+        return processSmallSum(vec, left, mid) + processSmallSum(vec, mid + 1, right) + mergeSmallSum(vec, left, mid, right);
+    }
+
+    template <typename T>
+    static int mergeSmallSum(vector<T> &vec, int left, int mid, int right)
+    {
+        int sum = 0;
+        int leftIdx = left, rightIdx = mid + 1, mergedIdx = 0;
+        vector<T> merged(right - left + 1, 0);
+        while (leftIdx <= mid && rightIdx <= right)
+        {
+            if (vec[leftIdx] < vec[rightIdx])
+            {
+                sum += (right - rightIdx + 1) * vec[leftIdx];
+                merged[mergedIdx++] = vec[leftIdx++];
+            }
+            else
+                merged[mergedIdx++] = vec[rightIdx++];
+        }
+        while (leftIdx <= mid)
+            merged[mergedIdx++] = vec[leftIdx++];
+        while (rightIdx <= right)
+            merged[mergedIdx++] = vec[rightIdx++];
+        std::copy(merged.begin(), merged.end(), vec.begin() + left);
+        return sum;
+    }
+
+    // 逆序对问题在一个数组中，左边的数如果比右边的数大，则折两个数构成一个逆序对，请打印所有逆序对。
+    template <typename T>
+    static void reversedPair(vector<T> &vec)
+    {
+        if (vec.size() == 0 || vec.size() == 1)
+            return;
+        processReversedPair(vec, 0, vec.size() - 1);
+    }
+
+    template <typename T>
+    static void processReversedPair(vector<T> &vec, int left, int right)
+    {
+        if (left >= right)
+            return;
+        int mid = left + ((right - left) >> 1);
+        processReversedPair(vec, left, mid);
+        processReversedPair(vec, mid + 1, right);
+        mergeReversedPair(vec, left, mid, right);
+    }
+
+    template <typename T>
+    static void mergeReversedPair(vector<T> vec, int left, int mid, int right)
+    {
+        int leftIdx = left, rightIdx = mid + 1, mergedIdx = 0;
+        vector<T> merged(right - left + 1, 0);
+        while (leftIdx <= mid && rightIdx <= right)
+        {
+            if (vec[leftIdx] < vec[rightIdx])
+                merged[mergedIdx++] = vec[leftIdx++];
+            else
+            {
+                for (int i = leftIdx; i <= mid; i++)
+                    cout << " (" << vec[i] << "," << vec[rightIdx] << ") ";
+                merged[mergedIdx++] = vec[rightIdx++];
+            }
+        }
+        while (leftIdx <= mid)
+            merged[mergedIdx++] = vec[leftIdx++];
+        while (rightIdx <= right)
+            merged[mergedIdx++] = vec[rightIdx++];
+        std::copy(merged.begin(), merged.end(), vec.begin() + left);
+    }
+};
+
+class HollandFlag
+{
+public:
+    template <typename T>
+    static void hollandFlag(vector<T> &vec, int num)
+    {
+        int lessRegion = -1;
+        for (int i = 0; i < vec.size(); i++)
+            if (vec[i] <= num)
+                std::swap(vec[++lessRegion], vec[i]);
+    }
+
+    template <typename T>
+    static void hollandFlagFull(vector<T> &vec, int num)
+    {
+        int lessRegion = -1, greatRegion = vec.size();
+        for (int i = 0; i < vec.size() && greatRegion > i; i++)
+        {
+            if (vec[i] < num)
+                std::swap(vec[++lessRegion], vec[i]);
+            else if (vec[i] > num)
+                std::swap(vec[--greatRegion], vec[i]);
+        }
+    }
+};
+
 int main(int argc, char *argv[])
 {
+    auto rng = std::default_random_engine{};
+
     vector<int> vec{9, -2, -1, 9, 2, 0, -3, 5, -6};
-    cout << Sorts::selectSort(vec);
-    cout << Sorts::bubbleSort(vec);
-    cout << Sorts::insertSort(vec);
+    std::shuffle(vec.begin(), vec.end(), rng);
+    cout << "After Shuffle: " << vec;
+    cout << "After Sorts: " << Sorts::selectSort(vec);
+    std::shuffle(vec.begin(), vec.end(), rng);
+    cout << "After Shuffle: " << vec;
+    cout << "After Sorts: " << Sorts::bubbleSort(vec);
+    std::shuffle(vec.begin(), vec.end(), rng);
+    cout << "After Shuffle: " << vec;
+    cout << "After Sorts: " << Sorts::insertSort(vec);
+    std::shuffle(vec.begin(), vec.end(), rng);
+    cout << "After Shuffle: " << vec;
+    cout << "After Sorts: " << Sorts::mergeSort(vec, 0, vec.size() - 1);
+    std::shuffle(vec.begin(), vec.end(), rng);
+    cout << "After Shuffle: " << vec;
+    cout << "After Sorts: " << Sorts::quickSort(vec, 0, vec.size() - 1);
 
     vector<int> nums{1, 2, 3, 4, 5};
     cout << BitXor::swap(nums, 0, 1);
@@ -202,5 +420,29 @@ int main(int argc, char *argv[])
     cout << findOneLocalMinima;
     int idx2 = BinarySearch::findOneLocalMinima(findOneLocalMinima, 0, findOneLocalMinima.size());
     cout << "Find findOneLocalMinima: " << findOneLocalMinima[idx2] << ", idx: " << idx2 << endl;
+
+    vector<int> vec1{9, -2, -1, 9, 2, 0, -3, 5, 16};
+    cout << vec1;
+    int max = Recursion::getMax(vec1, 0, vec1.size());
+    cout << "Max: " << max << endl;
+
+    vector<int> smallSum{1, 3, 4, 2, 5};
+    cout << "Small Sum: " << Recursion::smallSum(smallSum) << endl;
+
+    vector<int> reversedPair{5, 4, 3, 2, 1};
+    cout << reversedPair;
+    cout << "All reversed pair: ";
+    Recursion::reversedPair(reversedPair);
+    cout << endl;
+
+    vector<int> hollandFlag1{3, 5, 6, 7, 4, 3, 5, 8};
+    cout << hollandFlag1;
+    HollandFlag::hollandFlag(hollandFlag1, 5);
+    cout << hollandFlag1;
+    vector<int> hollandFlag2{3, 5, 6, 7, 4, 3, 5, 8};
+    cout << hollandFlag2;
+    HollandFlag::hollandFlagFull(hollandFlag2, 5);
+    cout << hollandFlag2;
+
     return 0;
 }
