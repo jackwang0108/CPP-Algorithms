@@ -13,3 +13,8 @@ add_executable(
     1-sorts-xor-binarysearch-Problems
     "1-sorts-xor-binarysearch-Problems.cpp"
 )
+
+add_executable(
+    2-linkedlist
+    "2-linkedlist.cpp"
+)
