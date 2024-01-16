@@ -10,6 +10,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 add_executable(
-    1-sorts-xor-binarysearch
-    "./1-sorts-xor-binarysearch.cpp"
+    1-sorts-xor-binarysearch-Problems
+    "1-sorts-xor-binarysearch-Problems.cpp"
 )
