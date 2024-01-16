@@ -53,5 +53,6 @@
         "PRINTVEC",
         "xorans"
     ],
-    "cmake.sourceDirectory": "/Users/jack/project/leetcode-c-/左神算法"
+    "cmake.sourceDirectory": "/Users/jack/project/leetcode-c-/左神算法",
+    "cmake.cmakePath": "/opt/local/bin/cmake"
 }
