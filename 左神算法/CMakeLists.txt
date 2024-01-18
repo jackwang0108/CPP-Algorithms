@@ -18,3 +18,8 @@ add_executable(
     2-linkedlist
     "2-linkedlist.cpp"
 )
+
+add_executable(
+    3-tree
+    "3-tree.cpp"
+)
