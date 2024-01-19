@@ -23,3 +23,8 @@ add_executable(
     3-tree
     "3-tree.cpp"
 )
+
+add_executable(
+    4-graph
+    "4-graph.cpp"
+)
