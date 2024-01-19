@@ -1,7 +1,9 @@
+#include <set>
 #include <map>
 #include <stack>
 #include <queue>
 #include <vector>
+#include <string>
 #include <utility>
 #include <iostream>
 
@@ -10,7 +12,9 @@ using std::endl;
 using std::map;
 using std::pair;
 using std::queue;
+using std::set;
 using std::stack;
+using std::string;
 using std::vector;
 
 struct TreeNode
@@ -36,17 +40,95 @@ struct TreeNode
 
     TreeNode *buildTree(vector<int> &vec, int rootIdx)
     {
-        if (rootIdx >= vec.size())
+        if (rootIdx >= vec.size() || vec[rootIdx] == -1)
             return nullptr;
+
         int leftChildIdx = rootIdx * 2 + 1, rightChildIdx = rootIdx * 2 + 2;
         TreeNode *root = new TreeNode;
-
-        if (vec[rootIdx] == -1)
-            return nullptr;
 
         root->value = vec[rootIdx];
         root->left = buildTree(vec, leftChildIdx);
         root->right = buildTree(vec, rightChildIdx);
+        return root;
+    }
+
+    string serial()
+    {
+        return _serial(this);
+    }
+
+    string _serial(TreeNode *root)
+    {
+        if (root == nullptr)
+            return "#_";
+
+        string result = std::to_string(root->value) + "_";
+        result += _serial(root->left);
+        result += _serial(root->right);
+        return result;
+    }
+
+    static TreeNode *unserial(string &serialedStr)
+    {
+        queue<string> que;
+        string delimiter = "_";
+        size_t pos = 0;
+        while ((pos = serialedStr.find(delimiter)) != std::string::npos)
+        {
+            que.push(serialedStr.substr(0, pos));
+            serialedStr.erase(0, pos + delimiter.length());
+        }
+
+        return _unserial(que);
+    }
+
+    static TreeNode *_unserial(queue<string> &que)
+    {
+        string &valueStr = que.front();
+        que.pop();
+
+        if (valueStr == "#")
+            return nullptr;
+
+        TreeNode *root = new TreeNode(std::stoi(valueStr));
+        root->left = _unserial(que);
+        root->right = _unserial(que);
+        return root;
+    }
+};
+
+struct ParentTreeNode
+{
+    int value;
+    ParentTreeNode *parent;
+    ParentTreeNode *left;
+    ParentTreeNode *right;
+
+    ParentTreeNode() : value(0), parent(nullptr), left(nullptr), right(nullptr) {}
+    explicit ParentTreeNode(int value) : value(value), parent(nullptr), left(nullptr), right(nullptr) {}
+
+    explicit ParentTreeNode(vector<int> &&vec) : value(0), parent(nullptr), left(nullptr), right(nullptr)
+    {
+        if (vec.empty())
+            return;
+
+        value = vec[0];
+        left = buildTree(vec, 1, this);
+        right = buildTree(vec, 2, this);
+    }
+
+    ParentTreeNode *buildTree(vector<int> &vec, int rootIdx, ParentTreeNode *parent)
+    {
+        if (rootIdx >= vec.size() || vec[rootIdx] == -1)
+            return nullptr;
+        int leftChildIdx = 2 * rootIdx + 1,
+            rightChildIdx = 2 * rootIdx + 2;
+        ParentTreeNode *root = new ParentTreeNode;
+
+        root->value = vec[rootIdx];
+        root->parent = parent;
+        root->left = buildTree(vec, leftChildIdx, root);
+        root->right = buildTree(vec, rightChildIdx, root);
         return root;
     }
 };
@@ -314,6 +396,119 @@ public:
 
         return {leftResult.first && rightResult.first && std::abs(leftResult.second - rightResult.second) <= 1, std::max(leftResult.second, rightResult.second) + 1};
     }
+
+    // 找到node1和node2最近的公共祖先
+    // 首先是最普通的思路, 获得一个子节点到父节点的hashMap, 然后获得node1的父节点路径
+    // node2再向上去回溯, 一旦有一个节点在node1的父节点路径中, 那么就直接返回这个节点
+    static TreeNode *lowestCommonAncestorHashMap(TreeNode *root, TreeNode *node1, TreeNode *node2)
+    {
+        map<TreeNode *, TreeNode *> parentLookup;
+        set<TreeNode *> parents{node1};
+
+        // 需要把头节点提前压入
+        getLookupMap(root, parentLookup);
+
+        while (node1 != nullptr)
+        {
+            node1 = parentLookup[node1];
+            parents.insert(node1);
+        }
+
+        set<TreeNode *>::iterator parentIter;
+        while ((parentIter = parents.find(node2)) == parents.end())
+            node2 = parentLookup[node2];
+
+        return *parentIter;
+    }
+
+    // 先序遍历构建表
+    static void getLookupMap(TreeNode *root, map<TreeNode *, TreeNode *> &parentLookup)
+    {
+        if (root == nullptr)
+            return;
+        if (root->left != nullptr)
+            parentLookup[root->left] = root;
+        if (root->right != nullptr)
+            parentLookup[root->right] = root;
+        getLookupMap(root->left, parentLookup);
+        getLookupMap(root->right, parentLookup);
+    }
+
+    // 上面的思路虽然简单, 但是空间复杂度却是O(N)的, 有没有空间复杂度更好的算法?
+    // 运用上面的思路, 想想当前节点需要向左子树和右子树去要什么信息?
+    // 答案是直接去要公共祖先.
+    // 如果node1和node2都在左子树或者右子树的话, 那么就问左边或者右边去要公共祖先
+    // 如果node1在左子树, node2在右子树的话, 那么就当前节点就是公共祖先, 返回当前节点即可
+    // 此外还要加上终止条件, 就是当前节点如果就是node1或者node2, 那么公共祖先就是自己, 所以返回自己
+    static TreeNode *lowestCommonAncestor(TreeNode *root, TreeNode *node1, TreeNode *node2)
+    {
+        // 自己就是node1或者node2, 那么公共祖先就是自己
+        if (root == nullptr || root == node1 || root == node2)
+            return root;
+
+        TreeNode *inLeft = lowestCommonAncestor(root->left, node1, node2);
+        TreeNode *inRight = lowestCommonAncestor(root->right, node1, node2);
+
+        // 如果一个在左一个在右, 返回当前节点即可
+        if (inLeft != nullptr && inRight != nullptr)
+            return root;
+
+        // 向上返回公共祖先
+        return inLeft != nullptr ? inLeft : inRight;
+    }
+
+    // 树型DP问题都可以用递归求解, 其余的就是分情况了
+    static ParentTreeNode *getSuccessorNode(ParentTreeNode *root, ParentTreeNode *node)
+    {
+        if (node == nullptr)
+            return nullptr;
+        // 有右子树, 那么后继节点就是右子树的最左节点
+        if (node->right != nullptr)
+            return getLeftMost(node->right);
+        // 没有右子树, 那么后继节点就是向上找
+        else
+        {
+            ParentTreeNode *parent = node->parent;
+            while (parent != nullptr && parent->left != node)
+                node = parent, parent = node->parent;
+            return parent;
+        }
+    }
+
+    static ParentTreeNode *getLeftMost(ParentTreeNode *root)
+    {
+        if (root == nullptr)
+            return nullptr;
+        while (root->left != nullptr)
+            root = root->left;
+        return root;
+    }
+
+    // 折纸问题
+    // 请把一段纸条竖着放在桌子上，
+    // 然后从纸条的下边向上方对折1次，压出折痕后展开。此时折痕是凹下去的，即折痕突起的方向指向纸条的背面。
+    // 如果从纸条的下边向上方连续对折2次，压出折痕后展开，此时有三条折痕，从上到下依次是下折痕、下折痕和上折痕。
+    // 给定一个输入参数N，代表纸条都从下边向上方连续对折N次。请从上到下打印所有折痕的方向。
+    // 例如:N=1时，打印:down, N=2时，打印:down down up
+    // 折痕就是一个二叉树, 每个节点就是一个折痕, 左侧就是凹折痕, 右侧就是凸折痕, 总体顺序就是中序遍历
+
+    // 这里使用i和N以及true打印出在我们脑海中模拟的树, 从而避免了构建真实的树所产生的额外的空间复杂度
+    static void printAllFolds(int n)
+    {
+        printAllFoldsProcess(1, n, true);
+    }
+
+    // i 是节点的层数, N 是总层数, down表示是凹折痕还是凸折痕
+    static void printAllFoldsProcess(int i, int N, bool down)
+    {
+        if (i > N)
+            return;
+        // 左节点
+        printAllFoldsProcess(i + 1, N, true);
+        cout << (down ? "凹" : "凸") << " ";
+        // 右节点
+        printAllFoldsProcess(i + 1, N, false);
+    }
 };
 
 int main(int argc, char *argv[])
@@ -365,5 +560,33 @@ int main(int argc, char *argv[])
     TreeNode notBalancedTree(vector<int>{1, 2, -1, 3, 4, -1, -1, 5});
     cout << "Is balanced tree? " << std::boolalpha << TreeProblems::isBalancedTree(&balancedTree).first << "\n";
     cout << "Is balanced tree? " << std::boolalpha << TreeProblems::isBalancedTree(&notBalancedTree).first << "\n";
+
+    // 最近的公共祖先
+    TreeNode ancestorTree(vector{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
+    TreeNode *node1 = ancestorTree.left->right->left;
+    TreeNode *node2 = ancestorTree.left->left->right;
+    cout << "lowest common ancestor: " << TreeProblems::lowestCommonAncestorHashMap(&ancestorTree, node1, node2)->value << "\n";
+    cout << "lowest common ancestor: " << TreeProblems::lowestCommonAncestor(&ancestorTree, node1, node2)->value << "\n";
+
+    // 返回二叉树的后继节点. 在二叉树的中序遍历的序列中，node的下一个节点叫作node的后继节点
+    // 因为中序遍历是按照左头右的顺序输出的, 因此后继节点就是下一个输出的节点
+    ParentTreeNode parentTree(vector<int>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
+    cout << "Successor Node: " << TreeProblems::getSuccessorNode(&parentTree, parentTree.left->left)->value << "\n";
+
+    // 树的序列化, 如果标记了空三种任意的遍历顺序都可以, 如果没有的话就需要两个遍历结合
+    TreeNode serialTree1(vector<int>{1, -1, 2, -1, -1, 3, -1});
+    TreeNode serialTree2(vector<int>{1, 2, -1, -1, 3, -1, -1});
+    string s1 = serialTree1.serial(), s2 = serialTree2.serial();
+    cout << "Serialed Tree1: " << s1 << "\n";
+    cout << "Serialed Tree2: " << s2 << "\n";
+    cout << "Unserialed Tree1 Preorder: ";
+    TreeDepthFirstTraversal::preorderRecurr(TreeNode::unserial(s1));
+    cout << "\n";
+    cout << "Unserialed Tree2 Preorder: ";
+    TreeDepthFirstTraversal::preorderRecurr(TreeNode::unserial(s2));
+    cout << "\n";
+
+    TreeProblems::printAllFolds(2);
+
     return 0;
 }
