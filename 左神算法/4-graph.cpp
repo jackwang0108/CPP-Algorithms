@@ -6,6 +6,7 @@
 #include <utility>
 #include <iomanip>
 #include <memory>
+#include <unordered_set>
 #include <iostream>
 
 using std::cout;
@@ -16,6 +17,7 @@ using std::queue;
 using std::set;
 using std::shared_ptr;
 using std::stack;
+using std::unordered_set;
 using std::vector;
 
 // 图的两种表示方法:
@@ -252,15 +254,15 @@ public:
         return result;
     }
 
-    class KruskalSets
+    class KruskalNodeSets
     {
     private:
         map<Node *, vector<Node *>> nodeSetMap;
 
     public:
-        KruskalSets() = delete;
+        KruskalNodeSets() = delete;
 
-        explicit KruskalSets(vector<Node *> &vec)
+        explicit KruskalNodeSets(vector<Node *> &vec)
         {
             for (Node *node : vec)
             {
@@ -289,7 +291,7 @@ public:
     };
 
     // 图的最小生成树-Kruskal算法, 从边考虑, 如果每次添加的边不成环, 那么就加入
-    static vector<Edge> KruskalMinimumSpanningTree(Graph &graph)
+    static vector<Edge> kruskalMinimumSpanningTree(Graph &graph)
     {
         vector<Node *> nodes;
         nodes.reserve(graph.IndexNodeMap.size());
@@ -297,7 +299,7 @@ public:
             nodes.push_back(node);
 
         // 排查是否有环
-        KruskalSets kSets(nodes);
+        KruskalNodeSets kSets(nodes);
 
         priority_queue<Edge> edgeQueue;
         for (Edge *edge : graph.edges)
@@ -315,6 +317,45 @@ public:
             }
         }
 
+        return result;
+    }
+
+    static vector<Edge> primMinimumSpanningTree(Graph &graph)
+    {
+        vector<Edge> result;
+        priority_queue<Edge> selectableEdgeQueue;
+        unordered_set<Node *> selectedNodeSet;
+
+        vector<Node *> allNodes;
+        for (auto &indexNodePair : graph.IndexNodeMap)
+            allNodes.push_back(indexNodePair.second);
+
+        // 处理深林, 即一个图有三个互相不连通的子图
+        for (Node *node : allNodes)
+        {
+            if (!selectedNodeSet.contains(node))
+            {
+                selectedNodeSet.insert(node);
+                // 解锁当前点相连的所有的边
+                for (Edge *connectedEdge : node->edges)
+                    selectableEdgeQueue.push(*connectedEdge);
+
+                // 连接其他的点
+                while (!selectableEdgeQueue.empty())
+                {
+                    Edge nextEdge = selectableEdgeQueue.top();
+                    selectableEdgeQueue.pop();
+                    Node *nextNode = nextEdge.to;
+                    if (!selectedNodeSet.contains(nextNode))
+                    {
+                        result.push_back(nextEdge);
+                        selectedNodeSet.insert(nextNode);
+                        for (Edge *connectedEdge : nextNode->edges)
+                            selectableEdgeQueue.push(*connectedEdge);
+                    }
+                }
+            }
+        }
         return result;
     }
 };
@@ -346,6 +387,7 @@ int main(int argc, char *argv[])
     auto result = GraphProblems::SortedTopology(TopologyGraph);
     cout << "Topology Sorted: " << GraphProblems::SortedTopology(TopologyGraph) << "\n";
 
+    // 最小生成树
     Graph kruskalGraph(vector<vector<int>>{
         {7, 1, 2},
         {2, 1, 3},
@@ -353,9 +395,16 @@ int main(int argc, char *argv[])
         {1000, 2, 4},
         {10000, 2, 5},
         {4, 3, 4}});
-    vector<Edge> kruskalResult = GraphProblems::KruskalMinimumSpanningTree(kruskalGraph);
+    // kruskal最小生成树算法
+    vector<Edge> kruskalResult = GraphProblems::kruskalMinimumSpanningTree(kruskalGraph);
     cout << "kruskal Minimum Spanning Tree: \n";
     for (auto &edge : kruskalResult)
+        cout << edge << "\n";
+    cout << "\n";
+    // prim最小生成树算法
+    vector<Edge> primResult = GraphProblems::primMinimumSpanningTree(kruskalGraph);
+    cout << "prim Minimum Spanning Tree: \n";
+    for (auto &edge : primResult)
         cout << edge << "\n";
     cout << "\n";
     return 0;
