@@ -69,17 +69,9 @@ struct Edge
 
     Edge(int weight, Node *from, Node *to) : weight(weight), from(from), to(to) {}
 
-    bool operator>(const Edge &other) const
+    bool operator<(const Edge &other) const
     {
-        return weight >= other.weight;
-    }
-};
-
-struct compare
-{
-    bool operator()(const Edge &e1, const Edge &e2)
-    {
-        return e1.weight > e2.weight; // 小顶堆，权值越小越靠前
+        return weight > other.weight;
     }
 };
 
@@ -307,7 +299,7 @@ public:
         // 排查是否有环
         KruskalSets kSets(nodes);
 
-        priority_queue<Edge, vector<Edge>, compare> edgeQueue;
+        priority_queue<Edge> edgeQueue;
         for (Edge *edge : graph.edges)
             edgeQueue.push(*edge);
 
@@ -364,7 +356,7 @@ int main(int argc, char *argv[])
     vector<Edge> kruskalResult = GraphProblems::KruskalMinimumSpanningTree(kruskalGraph);
     cout << "kruskal Minimum Spanning Tree: \n";
     for (auto &edge : kruskalResult)
-        cout << edge.from->value << " --> " << edge.to->value << "\n";
+        cout << edge << "\n";
     cout << "\n";
     return 0;
 }
