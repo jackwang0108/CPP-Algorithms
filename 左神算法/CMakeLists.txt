@@ -33,3 +33,8 @@ add_executable(
     5-trie-tree
     "5-trie-tree.cpp"
 )
+
+add_executable(
+    6-greedy-algorithm
+    "6-greedy-algorithm.cpp"
+)
