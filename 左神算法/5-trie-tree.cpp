@@ -13,7 +13,7 @@ using std::unique_ptr;
 struct TireTreeNode {
 	int end = 0;
 	int pass = 0;
-	unordered_map<char, TireTreeNode *> nexts{};
+	unordered_map<char, std::unique_ptr<TireTreeNode>> nexts{};
 };
 
 struct TireTree {
@@ -35,8 +35,8 @@ struct TireTree {
 		TireTreeNode *curr = root.get();
 		for (int i = 0; i < word.size(); i++) {
 			if (!curr->nexts.contains(word[i]))
-				curr->nexts.insert(std::make_pair(word[i], new TireTreeNode));
-			curr = curr->nexts[word[i]];
+				curr->nexts.insert(std::make_pair(word[i], std::make_unique<TireTreeNode>()));
+			curr = curr->nexts[word[i]].get();
 			curr->pass++;
 		}
 		curr->end++;
