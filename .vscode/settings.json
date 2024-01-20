@@ -101,5 +101,5 @@
     "cmake.sourceDirectory": "/Users/jack/project/leetcode-c-/左神算法",
     "cmake.cmakePath": "/opt/local/bin/cmake",
     "C_Cpp.clang_format_path": "/opt/homebrew/bin/clang-format",
-    "C_Cpp.clang_format_style": "file: ${workspaceFolder}/.clang-fotmat"
+    "C_Cpp.clang_format_style": ""
 }

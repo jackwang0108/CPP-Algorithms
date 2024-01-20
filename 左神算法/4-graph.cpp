@@ -1,14 +1,14 @@
+#include <iomanip>
+#include <iostream>
 #include <map>
+#include <memory>
+#include <queue>
 #include <set>
 #include <stack>
-#include <queue>
-#include <vector>
-#include <utility>
-#include <iomanip>
-#include <memory>
 #include <unordered_map>
 #include <unordered_set>
-#include <iostream>
+#include <utility>
+#include <vector>
 
 using std::cout;
 using std::map;
@@ -99,7 +99,7 @@ public:
 				intMatrix[edgeIdx][i] = matrix[edgeIdx][i];
 
 		this->~Graph();
-		new(this) Graph(intMatrix, matrix.size());
+		new (this) Graph(intMatrix, matrix.size());
 
 		for (int edgeIdx = 0; edgeIdx < matrix.size(); edgeIdx++)
 			delete[] intMatrix[edgeIdx];
@@ -357,14 +357,14 @@ public:
 
 int main(int argc, char *argv[]) {
 	Graph g(vector<vector<int>>{
-		{1, 0, 1},
-		{1, 0, 2},
-		{1, 0, 3},
-		{1, 1, 2},
-		{1, 1, 4},
-		{1, 2, 3},
-		{1, 2, 4},
-		{1, 3, 4}});
+	    {1, 0, 1},
+	    {1, 0, 2},
+	    {1, 0, 3},
+	    {1, 1, 2},
+	    {1, 1, 4},
+	    {1, 2, 3},
+	    {1, 2, 4},
+	    {1, 3, 4}});
 	cout << g;
 	// 广度优先遍历
 	cout << "Board First Search: ", GraphTraversal::boardFirstSearch(g.IndexNodeMap[0]) << "\n";
@@ -373,22 +373,22 @@ int main(int argc, char *argv[]) {
 
 	// 拓扑排序
 	Graph TopologyGraph(vector<vector<int>>{
-		{1, 3, 2},
-		{1, 3, 1},
-		{1, 2, 1},
-		{1, 2, 0},
-		{1, 1, 0}});
+	    {1, 3, 2},
+	    {1, 3, 1},
+	    {1, 2, 1},
+	    {1, 2, 0},
+	    {1, 1, 0}});
 	auto result = GraphProblems::SortedTopology(TopologyGraph);
 	cout << "Topology Sorted: " << GraphProblems::SortedTopology(TopologyGraph) << "\n";
 
 	// 最小生成树
 	Graph kruskalGraph(vector<vector<int>>{
-		{7,     1, 2},
-		{2,     1, 3},
-		{100,   1, 3},
-		{1000,  2, 4},
-		{10000, 2, 5},
-		{4,     3, 4}});
+	    {7, 1, 2},
+	    {2, 1, 3},
+	    {100, 1, 3},
+	    {1000, 2, 4},
+	    {10000, 2, 5},
+	    {4, 3, 4}});
 	// kruskal最小生成树算法
 	vector<Edge> kruskalResult = GraphProblems::kruskalMinimumSpanningTree(kruskalGraph);
 	cout << "kruskal Minimum Spanning Tree: \n";
@@ -404,11 +404,11 @@ int main(int argc, char *argv[]) {
 
 	// dijkstar算法
 	Graph dijkstarGraph(vector<vector<int>>{
-		{3,  1, 2},
-		{7,  1, 3},
-		{10, 1, 4},
-		{2,  2, 3},
-		{4,  3, 4}});
+	    {3, 1, 2},
+	    {7, 1, 3},
+	    {10, 1, 4},
+	    {2, 2, 3},
+	    {4, 3, 4}});
 	auto distanceMap = GraphProblems::dijkstar(dijkstarGraph, dijkstarGraph.IndexNodeMap[1]);
 	cout << "Distance Map: "
 	     << "\n";
