@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <memory>
 #include <iostream>
 #include <unordered_map>
 
@@ -7,6 +8,7 @@ using std::cout;
 using std::string;
 using std::unordered_map;
 using std::vector;
+using std::unique_ptr;
 
 struct TireTreeNode {
 	int end = 0;
@@ -15,12 +17,12 @@ struct TireTreeNode {
 };
 
 struct TireTree {
-	TireTreeNode *root{nullptr};
+    unique_ptr<TireTreeNode> root;
 
-	TireTree() : root(new TireTreeNode) {}
+	TireTree() : root(std::make_unique<TireTreeNode>()) {}
 
 	explicit TireTree(vector<string> &&vec)
-		: root(new TireTreeNode) {
+		: root(std::make_unique<TireTreeNode>()) {
 		for (string &w: vec)
 			insert(w);
 	}
@@ -29,8 +31,8 @@ struct TireTree {
 		if (word.empty())
 			return;
 
-		root->pass++;
-		TireTreeNode *curr = root;
+        root->pass++;
+		TireTreeNode *curr = root.get();
 		for (int i = 0; i < word.size(); i++) {
 			if (!curr->nexts.contains(word[i]))
 				curr->nexts.insert(std::make_pair(word[i], new TireTreeNode));
@@ -43,7 +45,6 @@ struct TireTree {
 
 int main(int argc, char *argv[]) {
 	TireTree tree(vector<string>{"ab", "abc", "bc", "bck"});
-	cout << "Test";
 
 	return 0;
 }
