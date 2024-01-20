@@ -28,3 +28,8 @@ add_executable(
     4-graph
     "4-graph.cpp"
 )
+
+add_executable(
+    5-trie-tree
+    "5-trie-tree.cpp"
+)
