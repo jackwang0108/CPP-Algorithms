@@ -101,8 +101,8 @@
         "Unserialed",
         "xorans"
     ],
-    "cmake.sourceDirectory": "/Users/jack/project/leetcode-c-/左神算法",
-    "cmake.cmakePath": "/opt/local/bin/cmake",
+    "cmake.sourceDirectory": "${workspaceFolder}",
+    "cmake.cmakePath": "cmake",
     "C_Cpp.clang_format_path": "/opt/homebrew/bin/clang-format",
     "C_Cpp.clang_format_style": ""
 }
