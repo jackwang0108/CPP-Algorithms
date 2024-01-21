@@ -1,10 +1,8 @@
+.idea
 test
 test.cpp
 **/bin
 **/*.dSYM
-.idea
-**/tmp.entitlements
-**/cmake-build-debug
 
 build
 
