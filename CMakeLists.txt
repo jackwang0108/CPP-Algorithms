@@ -53,3 +53,8 @@ add_executable(
     9-union-fold
     "9-union-fold.cpp"
 )
+
+add_executable(
+    10-kmp-manacher
+    "10-kmp-manacher.cpp"
+)
