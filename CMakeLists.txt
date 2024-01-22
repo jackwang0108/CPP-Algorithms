@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(
 	左神算法
-	VERSION 1.0.0
+	VERSION 2.0.0
 )
 
 set(CMAKE_CXX_STANDARD 20)
@@ -42,4 +42,9 @@ add_executable(
 add_executable(
 	7-force-recursion
 	"7-force-recursion.cpp"
+)
+
+add_executable(
+    8-hashfunction-and-hashmap
+    "8-hashfunction-and-hashmap.cpp"
 )
