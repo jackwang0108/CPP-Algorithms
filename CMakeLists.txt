@@ -48,3 +48,8 @@ add_executable(
     8-hashfunction-and-hashmap
     "8-hashfunction-and-hashmap.cpp"
 )
+
+add_executable(
+    9-union-fold
+    "9-union-fold.cpp"
+)
