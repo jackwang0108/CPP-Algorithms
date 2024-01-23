@@ -83,7 +83,8 @@
         "semaphore": "cpp",
         "stop_token": "cpp",
         "cinttypes": "cpp",
-        "version": "cpp"
+        "version": "cpp",
+        "stack": "cpp"
     },
     "cSpell.words": [
         "aabc",
@@ -95,6 +96,7 @@
         "Kruskal",
         "lresult",
         "nexts",
+        "popi",
         "PRINTVEC",
         "Recurr",
         "Serialed",

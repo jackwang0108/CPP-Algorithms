@@ -58,3 +58,8 @@ add_executable(
     10-kmp-manacher
     "10-kmp-manacher.cpp"
 )
+
+add_executable(
+    11-siliding-window-monotone-stack
+    "11-siliding-window-monotone-stack.cpp"
+)
