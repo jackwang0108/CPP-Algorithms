@@ -63,3 +63,8 @@ add_executable(
     11-siliding-window-monotone-stack
     "11-siliding-window-monotone-stack.cpp"
 )
+
+add_executable(
+    12-tree-dp-morris-traversal
+    "12-tree-dp-morris-traversal.cpp"
+)
