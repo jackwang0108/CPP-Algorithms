@@ -78,3 +78,8 @@ add_executable(
     14-bit-operatoion
     "14-bit-operatoion.cpp"
 )
+
+add_executable(
+    15-dynamic-programming
+    "15-dynamic-programming.cpp"
+)
