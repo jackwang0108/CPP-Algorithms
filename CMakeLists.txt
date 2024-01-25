@@ -73,3 +73,8 @@ add_executable(
     13-big-data
     "13-big-data.cpp"
 )
+
+add_executable(
+    14-bit-operatoion
+    "14-bit-operatoion.cpp"
+)
