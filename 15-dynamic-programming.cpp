@@ -473,11 +473,11 @@ public:
 	}
 
 	static int processBobDieRecursion(int N, int M, int i, int j, int k) {
-		if (k == 0) {
-			if (i < 0 || i > N || j < 0 || j > M)
-				return 0;
+		if (i < 0 || i > N || j < 0 || j > M)
+			return 0;
+		if (k == 0)
 			return 1;
-		}
+
 		return processBobDieRecursion(N, M, i - 1, j, k - 1) +
 		       processBobDieRecursion(N, M, i + 1, j, k - 1) +
 		       processBobDieRecursion(N, M, i, j - 1, k - 1) +
@@ -501,9 +501,9 @@ public:
 			for (int x = 1; x <= N; x++) {
 				for (int y = 1; y <= M; y++) {
 					dp[restStep][x][y] = dp[restStep - 1][x - 1][y];
-					dp[restStep][x][y] = dp[restStep - 1][x + 1][y];
-					dp[restStep][x][y] = dp[restStep - 1][x][y - 1];
-					dp[restStep][x][y] = dp[restStep - 1][x][y + 1];
+					dp[restStep][x][y] += dp[restStep - 1][x + 1][y];
+					dp[restStep][x][y] += dp[restStep - 1][x][y - 1];
+					dp[restStep][x][y] += dp[restStep - 1][x][y + 1];
 				}
 			}
 		}
@@ -511,6 +511,95 @@ public:
 	}
 };
 
+// 在严格表结构的动态规划的基础上, 可以进一步通过观察填表的规律从而进一步改进算法
+// 下买以换钱的方法数为例进行讲解
+class FinerOptimization {
+public:
+	// 换钱的方法数
+	// 【题目】
+	// 给定数组arr，arr中所有的值都为正数且不重复。每个值代表一种面值的货币，每种面值的货币可以使用任意张
+	// 再给定一个整数aim，代表要找的钱数，求组成aim的方法数。
+	static int coinsWayRecursion(const vector<int> &vec, int aim) {
+		return processCoinsWayRecursion(vec, 0, aim);
+	}
+
+	static int processCoinsWayRecursion(const vector<int> &vec, int idx, int restAmount) {
+		if (idx >= vec.size())
+			return restAmount == 0 ? 1 : 0;
+		int result = 0;
+		for (int numsOfThisOne = 0; numsOfThisOne * vec[idx] <= restAmount; numsOfThisOne++) {
+			result += processCoinsWayRecursion(vec, idx + 1, restAmount - numsOfThisOne * vec[idx]);
+		}
+		return result;
+	}
+
+
+	// 现在分析一下上面的严格表动态规划
+	// 以 vec={3, 5, 1, 2}, aim = 10为例
+	// 有两个可变变量idx和aim, 取值范围是0~4和0~10, 因此就是一个二维表
+	// 然后就是basecase分析,
+	//      1) 首先钱是负数, 所以整个表左侧都是不可行的
+	//      2) 其次就是idx越界, 即此时已经试完所有的面额了, 如果此时restAmount为0, 就是一个可行解, 否则就是无效解
+	//      因此basecase下就是idx=4时最后一行的值
+	// 最后就是递归的依赖分析, 即分析递推方程
+	// 假设现在在一个通用位置, 例如f(3, 7)
+	// 那么现在要计算f(3,7)的值, 即现在尝试的面额的idx=3, 即2元面额, 还剩的钱是7元
+	// 那么就需要上面的for循环中的内容, 以2元面额要计算取0张, 1张, 2张....一直到restAmount小于面额
+	// 因此, f(3,7)依赖f(4,7), f(4,5), f(4,3), f(4,1), 如下图所示
+	// 而计算f(3,5), 即尝试的面额的idx=3, 即2元面额, 还剩5元
+	// 同理, f(3,5)依赖f(4,5), f(4,3), f(4,1)
+	// = 我们发现, f(3,7)的值完全可以在f(3,5)的基础上加上f(4,7)的值, 这样就可以避免额外的计算
+	// = 这样的话, 假设是从下到上, 从左到右的填表,
+	// = 计算f(3,7)的解就是f(4,5)的解 + f(4,7)的解, 只需要再进行一次加法计算即可, 不需要像上面一样f(3,7)要计算f(4,7), f(4,5), f(4,3), f(4,1)进行四次加法
+	// = 这样做虽然没法减少指标, 但是可以优化常数时间, 因此效果更好
+	// ! 所以, 在严格表结构动态规划的基础上, 我们还通过观察, 实现更精细化的动态规划, 减少计算数量
+	// ! 这就是为什么需要虽然记忆化搜索动态规划和严格表结构动态规划的时间复杂度都是一样的, 我们还需要进行严格表结构动态规划的原因
+	// ! 第一步就是通过递归得到严格表结构的动态规划, 然后再观察严格表结构的填表方式得到规律, 从而得到精细化的动态规划
+	// = 需要注意的是, 不是所有观察出来的规律都有实际的含义, 对于上面的这道题, 观察出来的规律的含义就是:
+	// =     2元面额还剩7元的解的数量 = 使用一张2元后剩余5元使用2元面额的解的数量 + 不使用2元后剩余7元使用2元面额的解
+	// = 更普遍的情况是观察出来的规律是没有实际含义的, 因此就不要纠结寻找规律的实际含义
+	//
+	// restAmount      0   1   2   3   4   5   6   7   8   9  10
+	// idx
+	//               ,-------------------------------------------,
+	//  0            |   |   |   |   |   |   |   |   |   |   |   |
+	//               |-------------------------------------------|
+	//  1            |   |   |   |   |   |   |   |   |   |   |   |
+	//               |-------------------------------------------|
+	//  2            |   |   |   |   |   |   |   |   |   |   |   |
+	//               |-------------------------------------------|
+	//  3            |   |   |   |   |   | ? |   | ? |   |   |   |
+	//               |-------------------------------------------|
+	//    f(3,5)依赖  |   | √ |   | √ |   | √ |   |   |   |   |   |
+	//    f(3,7)依赖  |   | √ |   | √ |   | √ |   | √ |   |   |   |
+	//  4            | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+	//               '-------------------------------------------'
+	static int coinsWayDPGSFiner(const vector<int> &vec, int aim) {
+		vector<vector<int>> dp(vec.size() + 1, vector<int>(aim + 1, -1));
+
+		// basecase
+		dp[vec.size()][0] = 1;
+		for (int col = 1; col <= aim; col++)
+			dp[vec.size()][col] = -1;
+
+		// 填表
+		for (int idx = vec.size() - 1; idx >= 0; idx--) {
+			for (int restAmount = 0; restAmount <= aim; restAmount++) {
+				// 统一先设置成下方的值
+				dp[idx][restAmount] = dp[idx + 1][restAmount];
+				// 左边的位置不越界且有效
+				if (restAmount - vec[idx] >= 0 && dp[idx][restAmount - vec[idx]] != -1) {
+					// 下方的值无效
+					if (dp[idx][restAmount] == -1) {
+						dp[idx][restAmount] = dp[idx][restAmount - vec[idx]];
+					} else
+						dp[idx][restAmount] += dp[idx][restAmount - vec[idx]];
+				}
+			}
+		}
+		return dp[0][aim];
+	}
+};
 
 int main(int argc, char *argv[]) {
 	// 机器人移动问题
@@ -578,6 +667,16 @@ int main(int argc, char *argv[]) {
 	cout << "Bob die 3D GS: " << ThreeDimensionGridStructuredDP::bobDie3DGS(10, 10, 3, 2, 5);
 	std::chrono::time_point t23 = std::chrono::high_resolution_clock::now();
 	cout << ", time: " << (t23 - t22).count() << "\n";
+
+	// 换钱的方法数
+	std::chrono::time_point t24 = std::chrono::high_resolution_clock::now();
+	cout << "coinsWay Recursion: " << FinerOptimization::coinsWayRecursion(vector<int>{3, 5, 1, 2}, 10);
+	std::chrono::time_point t25 = std::chrono::high_resolution_clock::now();
+	cout << ", time: " << (t25 - t24).count() << "\n";
+	std::chrono::time_point t26 = std::chrono::high_resolution_clock::now();
+	cout << "coinsWay Finer: " << FinerOptimization::coinsWayDPGSFiner(vector<int>{3, 5, 1, 2}, 10);
+	std::chrono::time_point t27 = std::chrono::high_resolution_clock::now();
+	cout << ", time: " << (t27 - t26).count() << "\n";
 
 	return 0;
 }
