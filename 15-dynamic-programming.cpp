@@ -394,23 +394,72 @@ public:
 	//  3     | x | x | x | 4 |         3     | x | x | x | 0 |
 	//        '---------------'               '---------------'
 	static int cardsInLineWinner3DGS(const vector<int> &vec) {
-		vector<vector<int>> firstHandDP(vec.size(), vector<int>(vec.size(), -1));
-		vector<vector<int>> secondHandDP(vec.size(), vector<int>(vec.size(), -1));
-		// 填写basecase
-		for (int i = 0; i < vec.size(); i++)
-			firstHandDP[i][i] = vec[i], secondHandDP[i][i] = 0;
-		// 然后循环填表, 求解
-		for (int diagonalIdx = 1; diagonalIdx < vec.size(); diagonalIdx++) {
-			for (int i = 0; i < vec.size() - diagonalIdx; i++) {
-				firstHandDP[diagonalIdx + i][diagonalIdx + i] = std::max(
-				    secondHandDP[diagonalIdx + i][diagonalIdx + i - 1],
-				    secondHandDP[diagonalIdx + i + 1][diagonalIdx + i]);
-				secondHandDP[diagonalIdx + i][diagonalIdx + 1] = std::min(
-				    firstHandDP[diagonalIdx + i][diagonalIdx + i - 1],
-				    firstHandDP[diagonalIdx + i + 1][diagonalIdx + i]);
+		vector<vector<int>> firstHandDP(vec.size(), vector<int>(vec.size(), 0));
+		vector<vector<int>> secondHandDP(vec.size(), vector<int>(vec.size(), 0));
+		for (int j = 0; j < vec.size(); j++) {
+			firstHandDP[j][j] = vec[j];
+			for (int i = j - 1; i >= 0; i--) {
+				firstHandDP[i][j] = std::max(vec[i] + secondHandDP[i + 1][j], vec[j] + secondHandDP[i][j - 1]);
+				secondHandDP[i][j] = std::min(firstHandDP[i + 1][j], firstHandDP[i][j - 1]);
 			}
 		}
 		return std::max(firstHandDP[0][vec.size() - 1], secondHandDP[0][vec.size() - 1]);
+	}
+
+	// 象棋中马的跳法
+	// 【题目】
+	// 请同学们自行搜索或者想象一个象棋的棋盘，然后把整个棋盘放入第一象限，棋盘的最左下角是(0,0)位置。
+	// 那么整个棋盘就是横坐标上9条线、纵坐标上10条线的一个区域。
+	// 给你三个参数，x，y，k，返回如果“马”从(0,0)位置出发，必须走k步，最后落在(x,y)上的方法数有多少种
+	static int horseJumpRecursion(int x, int y, int k) {
+		return processHorseJumpRecursion(x, y, k);
+	}
+
+	// 递归的想法很简单, basecase就是越界返回0, 然后stepLeft=0并且两个Pos都是0则返回1
+	// 注意这里相当于从(x,y)跳回到(0,0)有多少种跳法
+	static int processHorseJumpRecursion(int xPos, int yPos, int stepLeft) {
+		if (xPos < 0 || xPos > 8 || yPos < 0 || yPos > 9)
+			return 0;
+		if (stepLeft == 0)
+			return xPos == 0 && yPos == 0 ? 1 : 0;
+		return processHorseJumpRecursion(xPos - 2, yPos - 1, stepLeft - 1) +
+		       processHorseJumpRecursion(xPos + 2, yPos - 1, stepLeft - 1) +
+		       processHorseJumpRecursion(xPos + 2, yPos + 1, stepLeft - 1) +
+		       processHorseJumpRecursion(xPos - 2, yPos + 1, stepLeft - 1) +
+		       processHorseJumpRecursion(xPos - 1, yPos - 2, stepLeft - 1) +
+		       processHorseJumpRecursion(xPos + 1, yPos - 2, stepLeft - 1) +
+		       processHorseJumpRecursion(xPos + 1, yPos + 2, stepLeft - 1) +
+		       processHorseJumpRecursion(xPos - 1, yPos + 2, stepLeft - 1);
+	}
+
+	// 可变变量项x, y, stepLeft(z)一共三个参数, 因此就是一个三维的表
+	// 最后返回(x, y, k)这个位置的值
+	// 边界条件就是越界就是0, 然后(0,0,0)这个位置的值是1, 其余都是0
+	// 每次填表的依赖就是上一层依赖下一层的位置
+	static int horseJump3DSG(int x, int y, int k) {
+		vector<vector<vector<int>>> dp(k + 1, vector<vector<int>>(9, vector<int>(10, 0)));
+		dp[0][0][0] = 1;
+		for (int stepLeft = 1; stepLeft <= k; stepLeft++) {
+			for (int xPos = 0; xPos < 9; xPos++) {
+				for (int yPos = 0; yPos < 10; yPos++) {
+					dp[stepLeft][xPos][yPos] += getValue(dp, xPos - 1, yPos + 2, stepLeft - 1);
+					dp[stepLeft][xPos][yPos] += getValue(dp, xPos + 1, yPos + 2, stepLeft - 1);
+					dp[stepLeft][xPos][yPos] += getValue(dp, xPos - 1, yPos - 2, stepLeft - 1);
+					dp[stepLeft][xPos][yPos] += getValue(dp, xPos + 1, yPos - 2, stepLeft - 1);
+					dp[stepLeft][xPos][yPos] += getValue(dp, xPos - 2, yPos + 1, stepLeft - 1);
+					dp[stepLeft][xPos][yPos] += getValue(dp, xPos + 2, yPos + 1, stepLeft - 1);
+					dp[stepLeft][xPos][yPos] += getValue(dp, xPos + 2, yPos - 1, stepLeft - 1);
+					dp[stepLeft][xPos][yPos] += getValue(dp, xPos - 2, yPos - 1, stepLeft - 1);
+				}
+			}
+		}
+		return dp[k][x][y];
+	}
+
+	static int getValue(vector<vector<vector<int>>> &dp, int x, int y, int k) {
+		if (x < 0 || x > 8 || y < 0 || y > 9)
+			return 0;
+		return dp[k][x][y];
 	}
 };
 
@@ -457,8 +506,20 @@ int main(int argc, char *argv[]) {
 	std::chrono::time_point t13 = std::chrono::high_resolution_clock::now();
 	cout << ", time: " << (t13 - t12).count() << "\n";
 	std::chrono::time_point t14 = std::chrono::high_resolution_clock::now();
-	cout << "CardsInLine Winner 3DSG: " << ThreeDimensionGridStructuredDP::cardsInLineWinnerRecursion({1, 2, 100, 4});
+	cout << "CardsInLine Winner 3DSG: " << ThreeDimensionGridStructuredDP::cardsInLineWinner3DGS({1, 2, 100, 4});
 	std::chrono::time_point t15 = std::chrono::high_resolution_clock::now();
 	cout << ", time: " << (t15 - t14).count() << "\n";
+
+
+	// 马走日问题
+	std::chrono::time_point t16 = std::chrono::high_resolution_clock::now();
+	cout << "HorseJump Recursion: " << ThreeDimensionGridStructuredDP::horseJumpRecursion(7, 7, 10);
+	std::chrono::time_point t17 = std::chrono::high_resolution_clock::now();
+	cout << ", time: " << (t17 - t16).count() << "\n";
+	std::chrono::time_point t18 = std::chrono::high_resolution_clock::now();
+	cout << "HorseJump Recursion: " << ThreeDimensionGridStructuredDP::horseJump3DSG(7, 7, 10);
+	std::chrono::time_point t19 = std::chrono::high_resolution_clock::now();
+	cout << ", time: " << (t19 - t18).count() << "\n";
+
 	return 0;
 }
