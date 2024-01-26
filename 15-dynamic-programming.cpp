@@ -326,6 +326,94 @@ public:
 	}
 };
 
+class ThreeDimensionGridStructuredDP {
+public:
+	// 前面讲解过CardsInLine这个问题, 现在使用动态规划再次进行求解
+	// 给定一个整型数组arr，代表数值不同的纸牌排成一条线。
+	// 玩家A和玩家B依次拿走每张纸牌，规定玩家A先拿，玩家B后拿，但是每个玩家每次只能拿走最左或最右的纸牌
+	// 玩家A和玩家B都绝顶聪明。请返回最后获胜者的分数。
+	// 【举例】
+	// arr=[1,2,100,4]。开始时，玩家A只能拿走1或4。
+	// 如果开始时玩家A拿走1，则排列变为[2,100,4]，接下来玩家B可以拿走2或4，然后继续轮到玩家A...
+	// 如果开始时玩家A拿走4，则排列变为[1,2,100]，接下来玩家B可以拿走1或100，然后继续轮到玩家A...
+	// 玩家A作为绝顶聪明的人不会先拿4，因为拿4之后，玩家B将拿走100。
+	// 所以玩家A会先拿1，让排列变为[2,100,4]，接下来玩家B不管怎么选，100都会被玩家A拿走。
+	// 玩家A会获胜，分数为101。所以返回101。arr=[1,100,2]。开始时，玩家A不管拿1还是2，玩家B作为绝顶聪明的人，都会把100拿走。
+	// 玩家B会获胜，分数为100。所以返回100。
+	static int cardsInLineWinnerRecursion(const vector<int> &vec) {
+		if (vec.empty())
+			return 0;
+		// 玩家A是先手拿牌, 玩家B是后手拿牌
+		return std::max(firstHandRecursion(vec, 0, vec.size() - 1), secondHandRecursion(vec, 0, vec.size() - 1));
+	}
+
+	// left ~ right 范围内先手拿牌
+	static int firstHandRecursion(const vector<int> &vec, int left, int right) {
+		// 如果left == right，意味着只剩下一张牌，玩家A直接拿走这张牌。
+		if (left == right)
+			return vec[right];
+		// 玩家A拿走左侧的牌 + 自己下一次抽牌的结果(玩家B会让玩家A下一次抽牌的结果最不好)
+		// 玩家A拿走右侧的牌 + 自己下一次抽牌的结果(玩家B会让玩家A下一次抽牌的结果最不好)
+		// 两个结果中返回最大的
+		return std::max(vec[left] + secondHandRecursion(vec, left + 1, right), vec[right] + secondHandRecursion(vec, left, right - 1));
+	}
+
+	static int secondHandRecursion(const vector<int> &vec, int left, int right) {
+		// 如果left == right，意味着只剩下一张牌，但玩家B没有机会拿牌，因为玩家A会先拿走它，所以返回0。
+		if (left == right)
+			return 0;
+		// 玩家B抽牌的让玩家A下一次抽牌结果最不利的牌
+		return std::min(firstHandRecursion(vec, left + 1, right), firstHandRecursion(vec, left, right - 1));
+	}
+
+	// 以 vec = {1, 2, 100, 4}为例
+	// 使用动态规划处理这个问题, 这里动态规划的可变参数就是区间, left和right, 也就是两个可变参数
+	// 这里firstHand和secondHand函数都是递归的函数, 因此其实有两张表
+	// 两个变量left和right的变化范围都是0~N-1, 所以做出来的表如下就是一个正方形的表
+	// 首先看边界条件,
+	//      a) 可行域: 因为left是要小于right的, 因此表中left > right的区域都是不可行的区域, 也就是表的下三角部分
+	//      b) basecase,
+	//              1) 对于firstHand, left=right时候直接返回牌的值, 所以对角线就是牌的值
+	//              2) 对于secondHand, left=right时候直接返回0, 所以对角线就是0
+	// 接下来再分析依赖
+	//      a) 主函数返回的是firstHand(0,N)和secondHand(0,N), 所以目标就是两个表的(0,N)处
+	//      b) 一般情况下(以(0,N)为例)
+	//              1) firstHand(0,N)依赖secondHand(1,3)和secondHand(0,2), 然后取最大
+	//              2) secondHand(0,N)依赖firstHand(1,3)和firstHand(0,2), 然后取最小
+	// 所以整个表的填表过程就是f表的主对角线填s表的斜上方一行, s表的主对角线填f表的斜上方一行, 以此类推, 直到最后得到两个G值
+	//          firstHand表                      secondHand表
+	// right    0   1   2   3          right    0   1   2   3
+	// left                            left
+	//        ,---------------,               ,---------------,
+	//  0     | 1 |   |   | G |         0     | 0 |   |   | G |
+	//        |---------------|               |---------------|
+	//  1     | x | 2 |   |   |         1     | x | 0 |   |   |
+	//        |---------------|               |---------------|
+	//  2     | x | x |100|   |         2     | x | x | 0 | 0 |
+	//        |---------------|               |---------------|
+	//  3     | x | x | x | 4 |         3     | x | x | x | 0 |
+	//        '---------------'               '---------------'
+	static int cardsInLineWinner3DGS(const vector<int> &vec) {
+		vector<vector<int>> firstHandDP(vec.size(), vector<int>(vec.size(), -1));
+		vector<vector<int>> secondHandDP(vec.size(), vector<int>(vec.size(), -1));
+		// 填写basecase
+		for (int i = 0; i < vec.size(); i++)
+			firstHandDP[i][i] = vec[i], secondHandDP[i][i] = 0;
+		// 然后循环填表, 求解
+		for (int diagonalIdx = 1; diagonalIdx < vec.size(); diagonalIdx++) {
+			for (int i = 0; i < vec.size() - diagonalIdx; i++) {
+				firstHandDP[diagonalIdx + i][diagonalIdx + i] = std::max(
+				    secondHandDP[diagonalIdx + i][diagonalIdx + i - 1],
+				    secondHandDP[diagonalIdx + i + 1][diagonalIdx + i]);
+				secondHandDP[diagonalIdx + i][diagonalIdx + 1] = std::min(
+				    firstHandDP[diagonalIdx + i][diagonalIdx + i - 1],
+				    firstHandDP[diagonalIdx + i + 1][diagonalIdx + i]);
+			}
+		}
+		return std::max(firstHandDP[0][vec.size() - 1], secondHandDP[0][vec.size() - 1]);
+	}
+};
+
 
 int main(int argc, char *argv[]) {
 	// 机器人移动问题
@@ -341,7 +429,7 @@ int main(int argc, char *argv[]) {
 	cout << ", time=" << (t3 - t2).count() << "\n";
 	// 严格表结构DP
 	std::chrono::time_point t4 = std::chrono::high_resolution_clock::now();
-	cout << "RobotWalkDP SG: " << GridStructuredDP::robotWalkDP(5, 2, 4, 4);
+	cout << "RobotWalkDP GS: " << GridStructuredDP::robotWalkDP(5, 2, 4, 4);
 	std::chrono::time_point t5 = std::chrono::high_resolution_clock::now();
 	cout << ", time=" << (t5 - t4).count() << "\n";
 
@@ -358,8 +446,19 @@ int main(int argc, char *argv[]) {
 	cout << ", time: " << (t9 - t8).count() << "\n";
 	// 严格表结构DP
 	std::chrono::time_point t10 = std::chrono::high_resolution_clock::now();
-	cout << "CoinsMin DP SG: " << GridStructuredDP::coinsMinDPSG(vector<int>{2, 7, 3, 5, 3}, 10);
+	cout << "CoinsMin DP GS: " << GridStructuredDP::coinsMinDPSG(vector<int>{2, 7, 3, 5, 3}, 10);
 	std::chrono::time_point t11 = std::chrono::high_resolution_clock::now();
 	cout << ", time: " << (t11 - t10).count() << "\n";
+
+
+	// 抽纸牌问题
+	std::chrono::time_point t12 = std::chrono::high_resolution_clock::now();
+	cout << "CardsInLine Winner Recursion: " << ThreeDimensionGridStructuredDP::cardsInLineWinnerRecursion({1, 2, 100, 4});
+	std::chrono::time_point t13 = std::chrono::high_resolution_clock::now();
+	cout << ", time: " << (t13 - t12).count() << "\n";
+	std::chrono::time_point t14 = std::chrono::high_resolution_clock::now();
+	cout << "CardsInLine Winner 3DSG: " << ThreeDimensionGridStructuredDP::cardsInLineWinnerRecursion({1, 2, 100, 4});
+	std::chrono::time_point t15 = std::chrono::high_resolution_clock::now();
+	cout << ", time: " << (t15 - t14).count() << "\n";
 	return 0;
 }
