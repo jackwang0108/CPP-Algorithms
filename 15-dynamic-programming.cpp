@@ -461,6 +461,54 @@ public:
 			return 0;
 		return dp[k][x][y];
 	}
+
+
+	// 再来一个题
+	// Bob的生存概率
+	// 【题目】
+	// 给定五个参数n,m,i,j,k。表示在一个N*M的区域，Bob处在(i,j)点，每次Bob等概率的向上、下、左、右四个方向移动一步，Bob必须走K步。
+	// 如果走完之后，Bob还停留在这个区域上，就算Bob存活，否则就算Bob死亡。请求解Bob的生存概率，返回字符串表示分数的方式
+	static int bobDieRecursion(int N, int M, int i, int j, int k) {
+		return processBobDieRecursion(N, M, i, j, k);
+	}
+
+	static int processBobDieRecursion(int N, int M, int i, int j, int k) {
+		if (k == 0) {
+			if (i < 0 || i > N || j < 0 || j > M)
+				return 0;
+			return 1;
+		}
+		return processBobDieRecursion(N, M, i - 1, j, k - 1) +
+		       processBobDieRecursion(N, M, i + 1, j, k - 1) +
+		       processBobDieRecursion(N, M, i, j - 1, k - 1) +
+		       processBobDieRecursion(N, M, i, j + 1, k - 1);
+	}
+
+	// 改成严格表结构的动态规划, 简单
+	// 可变变量三个, i, j, k, 所以是三维表
+	// 返回的值是(i, j, k)
+	// 边界条件就是越界就是0, 可行域就是N*M内都是1, 所以k从0开始填
+	// 三维表中的每一个二位标的范围要注意, 理论上来说整个区域是无限的一个平面
+	// 即bob的position的x和y都可能是无穷, 但是除了N*M以外都是0, 所以就可以认为这个范围就是一片淹没在0中的1
+	// 因此只需要给1的周围加一圈0即可
+	static int bobDie3DGS(int N, int M, int i, int j, int k) {
+		vector<vector<vector<int>>> dp(k + 1, vector<vector<int>>(N + 2, vector<int>(M + 2, 0)));
+		for (int x = 1; x <= N; x++)
+			for (int y = 1; y <= M; y++)
+				dp[0][x][y] = 1;
+		// 填表
+		for (int restStep = 1; restStep <= k; restStep++) {
+			for (int x = 1; x <= N; x++) {
+				for (int y = 1; y <= M; y++) {
+					dp[restStep][x][y] = dp[restStep - 1][x - 1][y];
+					dp[restStep][x][y] = dp[restStep - 1][x + 1][y];
+					dp[restStep][x][y] = dp[restStep - 1][x][y - 1];
+					dp[restStep][x][y] = dp[restStep - 1][x][y + 1];
+				}
+			}
+		}
+		return dp[k][i + 1][j + 1];
+	}
 };
 
 
@@ -506,7 +554,7 @@ int main(int argc, char *argv[]) {
 	std::chrono::time_point t13 = std::chrono::high_resolution_clock::now();
 	cout << ", time: " << (t13 - t12).count() << "\n";
 	std::chrono::time_point t14 = std::chrono::high_resolution_clock::now();
-	cout << "CardsInLine Winner 3DSG: " << ThreeDimensionGridStructuredDP::cardsInLineWinner3DGS({1, 2, 100, 4});
+	cout << "CardsInLine Winner 3D GS: " << ThreeDimensionGridStructuredDP::cardsInLineWinner3DGS({1, 2, 100, 4});
 	std::chrono::time_point t15 = std::chrono::high_resolution_clock::now();
 	cout << ", time: " << (t15 - t14).count() << "\n";
 
@@ -517,9 +565,19 @@ int main(int argc, char *argv[]) {
 	std::chrono::time_point t17 = std::chrono::high_resolution_clock::now();
 	cout << ", time: " << (t17 - t16).count() << "\n";
 	std::chrono::time_point t18 = std::chrono::high_resolution_clock::now();
-	cout << "HorseJump Recursion: " << ThreeDimensionGridStructuredDP::horseJump3DSG(7, 7, 10);
+	cout << "HorseJump 3D GS: " << ThreeDimensionGridStructuredDP::horseJump3DSG(7, 7, 10);
 	std::chrono::time_point t19 = std::chrono::high_resolution_clock::now();
 	cout << ", time: " << (t19 - t18).count() << "\n";
+
+	// Bob的生存概率
+	std::chrono::time_point t20 = std::chrono::high_resolution_clock::now();
+	cout << "Bob die Recursion: " << ThreeDimensionGridStructuredDP::bobDieRecursion(10, 10, 3, 2, 5);
+	std::chrono::time_point t21 = std::chrono::high_resolution_clock::now();
+	cout << ", time: " << (t21 - t20).count() << "\n";
+	std::chrono::time_point t22 = std::chrono::high_resolution_clock::now();
+	cout << "Bob die 3D GS: " << ThreeDimensionGridStructuredDP::bobDie3DGS(10, 10, 3, 2, 5);
+	std::chrono::time_point t23 = std::chrono::high_resolution_clock::now();
+	cout << ", time: " << (t23 - t22).count() << "\n";
 
 	return 0;
 }
