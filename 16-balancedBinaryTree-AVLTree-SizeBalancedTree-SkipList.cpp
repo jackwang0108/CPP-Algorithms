@@ -116,14 +116,16 @@ public:
 		// 情况一: 只有一个孩子, 这里是左孩子
 		if (nodeToDelete->left == nullptr)
 			;
+		return root;
 	}
 
 	// 移植以newNode为根节点的子树到nodeToReplace所指向的节点上
 	shared_ptr<TreeNode> transplant(shared_ptr<TreeNode> nodeToReplace, shared_ptr<TreeNode> newNode) {
-		if (nodeToReplace->parent.lock() == nullptr)
-			this->root = newNode;
-		else if (nodeToReplace == nodeToReplace->parent.lock()->left)
-			nodeToReplace;
+		// if (nodeToReplace->parent.lock() == nullptr)
+		// 	this->root = newNode;
+		// else if (nodeToReplace == nodeToReplace->parent.lock()->left)
+		// 	nodeToReplace;
+		return newNode;
 	}
 };
 
