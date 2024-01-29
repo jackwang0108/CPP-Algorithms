@@ -83,3 +83,8 @@ add_executable(
     15-dynamic-programming
     "15-dynamic-programming.cpp"
 )
+
+add_executable(
+    16-balancedBinaryTree-AVLTree-SizeBalancedTree-SkipList
+    "16-balancedBinaryTree-AVLTree-SizeBalancedTree-SkipList.cpp"
+)
