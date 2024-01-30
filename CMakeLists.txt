@@ -90,6 +90,11 @@ add_executable(
 )
 
 add_executable(
-    17-sliding-windows-brute-force-table-preprocessing
-    "17-sliding-windows-brute-force-table-preprocessing.cpp"
+    17-medium-1.cpp
+    "17-medium-1.cpp"
+)
+
+add_executable(
+    18-medium-2
+    "18-medium-2.cpp"
 )
