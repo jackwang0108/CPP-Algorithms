@@ -88,3 +88,8 @@ add_executable(
     16-balancedBinaryTree-AVLTree-SizeBalancedTree-SkipList
     "16-balancedBinaryTree-AVLTree-SizeBalancedTree-SkipList.cpp"
 )
+
+add_executable(
+    17-sliding-windows-brute-force-table-preprocessing
+    "17-sliding-windows-brute-force-table-preprocessing.cpp"
+)
