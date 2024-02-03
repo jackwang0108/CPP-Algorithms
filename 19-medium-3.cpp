@@ -269,6 +269,86 @@ public:
 };
 
 
+class StreamTopKTimes {
+	// 实现一个类, 支持两个操作:
+	// add(string &str)
+	// printTopK(int k)
+	// 用户可以在任意时候调用这两个函数
+	// 这里问题的关键就是上面的TopKTimes词频表不会变的, 而这里的词频表会随着用户新加字符串而改变, 同时需要对应调整大顶堆. 所以不能使用系统提供的大顶堆, 需要自己手撸一个大顶堆
+public:
+	int k = 0;
+	int heapSize = 0;
+	vector<pair<string, int>> heap;
+	unordered_map<string, int> freqMap;
+	unordered_map<string, int> strIndexMap;
+
+	explicit StreamTopKTimes(int k) : k(k) {
+		heap.resize(k);
+	}
+
+	void heapify(int idx, int size) {
+		int left = idx * 2 + 1;
+		while (left < heapSize) {
+			int largerChildIdx = left + 1 < heapSize && heap[left].second > heap[left + 1].second ? left : left + 1;
+			int largestIdx = heap[idx].second > heap[largerChildIdx].second ? idx : largerChildIdx;
+			if (idx == largestIdx)
+				break;
+			std::swap(heap[idx], heap[largerChildIdx]);
+			std::swap(strIndexMap[heap[idx].first], strIndexMap[heap[largestIdx].first]);
+			idx = largestIdx;
+			left = 2 * idx + 1;
+		}
+	}
+
+	void heapInsert(int idx) {
+		while (idx >= 0 && heap[idx].second < heap[(idx - 1) / 2].second) {
+			std::swap(heap[idx], heap[(idx - 1) / 2]);
+			std::swap(strIndexMap[heap[idx].first], strIndexMap[heap[(idx - 1) / 2].first]);
+			idx = (idx - 1) / 2;
+		}
+	}
+
+	void add(const string &str) {
+		int currIndex = -1;
+		if (!freqMap.contains(str)) {
+			freqMap[str] = 1;
+			strIndexMap[str] = -1;
+		} else {
+			freqMap[str] += 1;
+			currIndex = strIndexMap[str];
+		}
+
+		int currTimes = freqMap[str];
+		// 不在堆中
+		if (currIndex == -1) {
+			// 堆已经满了
+			if (heapSize == heap.size()) {
+				// 大于门槛, 可以进堆
+				if (heap[0].second < currTimes) {
+					strIndexMap[heap[0].first] = -1;
+					strIndexMap[str] = 0;
+					heap[0] = std::make_pair(str, currTimes);
+					heapify(0, heapSize);
+				}
+				// 堆没满, 直接进堆
+			} else {
+				strIndexMap[str] = heapSize;
+				heap[heapSize] = std::make_pair(str, currTimes);
+				heapInsert(heapSize++);
+			}
+			// 本身就在堆中, 更新出现次数之后需要调整
+		} else {
+			heap[strIndexMap[str]].second = currTimes;
+			heapify(currIndex, heapSize);
+		}
+	}
+
+	void printTopK() {
+		for (int i = 0; i < k; i++)
+			cout << heap[i].first << ", times=" << heap[i].second << "\n";
+	}
+};
+
 int main(int argc, char *argv[]) {
 	// 洗衣机问题
 	cout << "Super Washing Machine: " << SuperWashingMachine::superWashingMachine(vector<int>{1, 0, 5}) << "\n";
@@ -298,5 +378,20 @@ int main(int argc, char *argv[]) {
 
 	// top k问题
 	cout << "Top K Times: " << TopKTimes::topKTimes({"abc", "abc", "bck", "efg", "efg", "efg", "bck", "bck"}, 2) << "\n";
+
+	// 流式top k问题
+	StreamTopKTimes stk(3);
+	stk.add("a");
+	stk.add("b");
+	stk.add("c");
+	stk.add("a");
+	stk.add("c");
+	stk.add("b");
+	stk.add("b");
+	stk.add("d");
+	stk.add("d");
+	stk.add("d");
+	stk.printTopK();
+
 	return 0;
 }
