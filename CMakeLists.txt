@@ -103,3 +103,8 @@ add_executable(
     19-medium-3
     "19-medium-3.cpp"
 )
+
+add_executable(
+    20-medium-4
+    "20-medium-4.cpp"
+)
