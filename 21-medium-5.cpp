@@ -197,7 +197,7 @@ public:
 		};
 		priority_queue<Job> que;
 
-		return 0;
+		return {0};
 	}
 };
 
