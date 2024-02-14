@@ -113,3 +113,8 @@ add_executable(
     21-medium-5
     "21-medium-5.cpp"
 )
+
+add_executable(
+    22-medium-6
+    "22-medium-6.cpp"
+)
