@@ -236,6 +236,7 @@ class SubMatrixMaxSum {
 	// 给定一个整型矩阵，返回子矩阵的最大累计和。
 public:
 	// 核心思路就是把求子矩阵转换为求子数组, 所以大流程上是行上O(N^2), 然后累加
+	// = 事实上, 通常来说, 当看到子矩阵问题的时候, 首先先想想子数组如何解决, 而后仿照我们这里的方式进行行的排列就可以解决子矩阵问题
 	static int subMatrixMaxSum(const vector<vector<int>> &matrix) {
 		int max = std::numeric_limits<int>::min();
 		for (int startRow = 0; startRow < matrix.size(); startRow++) {
