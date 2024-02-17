@@ -220,13 +220,32 @@ public:
 	// 因此, 我们就可以设计如下的算法: 从左向右计算一个累加和curr, 使用一个变量max保存curr的历史最大值, 如果curr变成0了, 那么就说明curr之前的这一段已经不可能是最大了, 因为后面还有可能, 所以curr直接重置为0, 然后重复上面的流程
 	// = 假设答案法的题目都是难题, 这种题就是在已知的dp, 贪心等等没有办法给出很好的解的时候, 就假设答案去探索性质, 需要多刷多见
 	static int subArrayMaxSum(const vector<int> &vec) {
-		int curr = vec[0];
+		int curr = 0;
 		int max = vec[0];
-		for (int i = 1; i < vec.size(); i++) {
+		for (int i = 0; i < vec.size(); i++) {
 			curr += vec[i];
 			max = std::max(max, curr);
 			if (curr <= 0)
 				curr = 0;
+		}
+		return max;
+	}
+};
+
+class SubMatrixMaxSum {
+	// 给定一个整型矩阵，返回子矩阵的最大累计和。
+public:
+	// 核心思路就是把求子矩阵转换为求子数组, 所以大流程上是行上O(N^2), 然后累加
+	static int subMatrixMaxSum(const vector<vector<int>> &matrix) {
+		int max = std::numeric_limits<int>::min();
+		for (int startRow = 0; startRow < matrix.size(); startRow++) {
+			for (int endRow = startRow + 1; endRow < matrix.size(); endRow++) {
+				vector<int> result(matrix[0].size(), 0);
+				for (int i = startRow; i < endRow; i++) {
+					std::transform(result.begin(), result.end(), matrix[i].begin(), result.begin(), std::plus<int>());
+					max = std::max(max, SubArrayMaxSum::subArrayMaxSum(result));
+				}
+			}
 		}
 		return max;
 	}
@@ -249,5 +268,8 @@ int main(int argc, char *argv[]) {
 
 	// 最大子数组和
 	cout << "Max Sub Array Sum: " << SubArrayMaxSum::subArrayMaxSum({1, 1, -1, -10, 11, 4, -6, 9, 20, -10, 2}) << "\n";
+
+	// 最大子矩阵累计和
+	cout << "Max Sub Matrix Sum: " << SubMatrixMaxSum::subMatrixMaxSum({{-5, 3, 6, 4}, {-7, 9, -5, 3}, {-10, 1, -200, 4}}) << "\n";
 	return 0;
 }
