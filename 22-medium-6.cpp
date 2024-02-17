@@ -15,6 +15,14 @@ using std::stringstream;
 using std::unordered_map;
 using std::vector;
 
+template<typename T>
+std::ostream &operator<<(std::ostream &os, const vector<T> &vec) {
+	os << "{";
+	for (int i = 0; i < vec.size(); i++)
+		os << vec[i] << (i == vec.size() - 1 ? "}" : ", ");
+	return os;
+}
+
 class GetFolderTree {
 	// 给你一个字符串类型的数组arr，譬如：arr={"b\\cst","d\\","a\\d\\e","a\\b\\c"};
 	// 你把这些路径中蕴含的目录结构给画出来，子目录直接列在父目录下面，并比父目录向右进两格，就像这样:
@@ -252,6 +260,88 @@ public:
 	}
 };
 
+class Light {
+	// 小Q正在给一条长度为n的道路设计路灯安置方案。
+	// 为了让问题更简单, 小Q把道路视为n个方格, 需要照亮的地方用'.'表示, 不需要照亮的障碍物格子用'X'表示。
+	// 小Q现在要在道路上设置一些路灯, 对于安置在pos位置的路灯, 这盏路灯可以照亮pos-1, pos, pos+1这三个位置。
+	// 小Q希望能安置尽量少的路灯照亮所有'.'区域, 希望你能帮他计算一下最少需要多少盏路灯。
+	// 输入描述：
+	// 输入的第一行包含一个正整数t (1<=t<=1000), 表示测试用例数
+	// 接下来每两行一个测试数据, 第一行一个正整数n (1<=n<=1000), 表示道路的长度。
+	// 第二行一个字符串s表示道路的构造, 只包含'.'和'X'。
+	// 输出描述：
+	// 对于每个测试用例,输出一个正整数表示最少需要多少盏路灯。
+public:
+	// 分析第i位即可
+	// 如果i位上是x, 那么第i位就不放灯, 如果第i位上是·, 就放灯, 同时跳跃
+	// 这里有个潜台词, 就是之前的灯不会影响到当前位置
+	static int light(const string &road) {
+		if (road.empty())
+			return 0;
+
+		int ans = 0, idx = 0;
+		while (idx < road.length()) {
+			if (road[idx] == 'x')
+				idx++;
+			else {
+				// 潜台词: 前面的灯不会影响到当前位置
+				ans++;
+				// 局部是.x, 那么就从x的下一个开始看
+				if (road[idx + 1] == 'x')
+					idx += 2;
+				// 局部是..?
+				// 如果是..., 那么就从...?开始看, 表示这个灯放在三个点中间
+				// 如果是..x, 还是从..x?开始看, 灯放到后面即可
+				else
+					idx += 3;
+			}
+		}
+		return ans;
+	}
+};
+
+class PreAndInArrayToPosArray {
+	// 已知一棵二叉树中没有重复节点，并且给定了这棵树的中序遍历数组和先序遍历数组，返回后序遍历数组。比如
+	// 给定：
+	// int pre[] = {1,2,4,5,3,6,7}
+	// int in[] = {4,2,5,1,6,3,7}
+	// 返回：
+	// {4,5,2,6,7,3,1}
+public:
+	// 递归求解, 先序是中左右, 中序是左中右, 后序是左右中 因此根据先序的第一个元素, 就可以找到中序中左子树和右子树的节点
+	// 然后再在先序中找到左子树和右子树的先序
+	static vector<int> preAndInArrayToPosArray(const vector<int> &pre, const vector<int> &in) {
+		if (pre.empty())
+			return {};
+		vector<int> post(pre.size(), 0);
+		return process(pre, in, post, 0, pre.size() - 1, 0, in.size() - 1, 0, post.size() - 1);
+	}
+
+	static vector<int> process(const vector<int> &pre, const vector<int> &in, vector<int> &post, int preLeft, int preRight, int inLeft, int inRight, int postLeft, int postRight) {
+		if (preLeft > preRight)
+			return post;
+
+		if (preLeft == preRight) {
+			post[postLeft] = pre[preLeft];
+			return post;
+		}
+		post[postRight] = pre[preLeft];
+
+		int root = pre[preLeft];
+		int inRootIdx = inLeft;
+		for (; inRootIdx <= inRight; inRootIdx++)
+			if (in[inRootIdx] == root)
+				break;
+
+		// 处理左子树
+		process(pre, in, post, preLeft + 1, preLeft + inRootIdx - inLeft, inLeft, inRootIdx - 1, postLeft, postLeft + inRootIdx - inLeft - 1);
+		// 处理右子树
+		process(pre, in, post, preLeft + inRootIdx - inLeft + 1, preRight, inRootIdx + 1, inRight, postLeft + inRootIdx - inLeft, postRight - 1);
+
+		return post;
+	}
+};
+
 int main(int argc, char *argv[]) {
 	// 打印目录结构
 	cout << "Get Folder Tree:\n";
@@ -272,5 +362,12 @@ int main(int argc, char *argv[]) {
 
 	// 最大子矩阵累计和
 	cout << "Max Sub Matrix Sum: " << SubMatrixMaxSum::subMatrixMaxSum({{-5, 3, 6, 4}, {-7, 9, -5, 3}, {-10, 1, -200, 4}}) << "\n";
+
+	// 最少路灯问题
+	cout << "Min Lights: " << Light::light(".x.x.x.x.x") << "\n";
+	cout << "Min Lights: " << Light::light("...x.x.x.x") << "\n";
+
+	// 先序中序转后序
+	cout << "PreAndInArrayToPosArray: " << PreAndInArrayToPosArray::preAndInArrayToPosArray({1, 2, 4, 5, 3, 6, 7}, {4, 2, 5, 1, 6, 3, 7}) << "\n";
 	return 0;
 }
